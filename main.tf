@@ -1,4 +1,5 @@
 provider "aws" {
+  alias      = "ap-southeast-2"
   access_key = var.aws_access_key
   secret_key = var.aws_secret_key
   region     = var.aws_regions[0]
@@ -13,7 +14,7 @@ provider "aws" {
 
 # Bucket used to store website content.
 resource "aws_s3_bucket" "wiki_bucket" {
-  bucket = "wiki.thanesh.io"
+  bucket = var.website_domain_name
 }
 
 # ACL policy for website objects.
@@ -57,7 +58,7 @@ resource "aws_s3_bucket_policy" "wiki_allow_read_access_to_objects" {
   })
 }
 
-# Create SSL Certificate in ACM.
+# Request SSL Certificate in ACM.
 resource "aws_acm_certificate" "cert" {
   provider                  = aws.us-east-1
   domain_name               = "*.thanesh.io"
@@ -69,7 +70,7 @@ resource "aws_acm_certificate" "cert" {
   }
 }
 
-# Create Cloudfront Distribution for S3 bucket.
+# Cloudfront Distribution for S3 bucket.
 resource "aws_cloudfront_distribution" "s3_distribution" {
   origin {
     domain_name = aws_s3_bucket.wiki_bucket.bucket_regional_domain_name
@@ -80,7 +81,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   is_ipv6_enabled     = true
   default_root_object = "index.html"
 
-  aliases = ["wiki.thanesh.io"]
+  aliases = [var.website_domain_name]
 
   default_cache_behavior {
     allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
@@ -106,6 +107,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   }
 }
 
+# Retrieve existing hosted zone.
 data "aws_route53_zone" "my_domain" {
   name = "thanesh.io"
 }
@@ -113,7 +115,7 @@ data "aws_route53_zone" "my_domain" {
 # Add A record in Route53 for website.
 resource "aws_route53_record" "wiki_record" {
   zone_id = data.aws_route53_zone.my_domain.zone_id
-  name    = "wiki.thanesh.io"
+  name    = var.website_domain_name
   type    = "A"
 
   alias {
