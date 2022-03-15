@@ -1,10 +1,11 @@
+# AWS provider for ap-southeast-1 region. Used as default.
 provider "aws" {
-  alias      = "ap-southeast-2"
   access_key = var.aws_access_key
   secret_key = var.aws_secret_key
   region     = var.aws_regions[0]
 }
 
+# AWS provider for us-east-1 region.
 provider "aws" {
   alias      = "us-east-1"
   access_key = var.aws_access_key
@@ -13,19 +14,19 @@ provider "aws" {
 }
 
 # Bucket used to store website content.
-resource "aws_s3_bucket" "wiki_bucket" {
+resource "aws_s3_bucket" "website_bucket" {
   bucket = var.website_domain_name
 }
 
 # ACL policy for website objects.
-resource "aws_s3_bucket_acl" "wiki_acl" {
-  bucket = aws_s3_bucket.wiki_bucket.id
+resource "aws_s3_bucket_acl" "website_bucket_acl" {
+  bucket = aws_s3_bucket.website_bucket.id
   acl    = "private"
 }
 
 # S3 Bucket Static Website Configuration.
-resource "aws_s3_bucket_website_configuration" "wiki_website" {
-  bucket = aws_s3_bucket.wiki_bucket.id
+resource "aws_s3_bucket_website_configuration" "website_bucket_configuration" {
+  bucket = aws_s3_bucket.website_bucket.id
 
   index_document {
     suffix = "index.html"
@@ -33,16 +34,16 @@ resource "aws_s3_bucket_website_configuration" "wiki_website" {
 }
 
 # S3 Bucket Versioning Configuration
-resource "aws_s3_bucket_versioning" "wiki_versioning" {
-  bucket = aws_s3_bucket.wiki_bucket.id
+resource "aws_s3_bucket_versioning" "website_bucket_versioning" {
+  bucket = aws_s3_bucket.website_bucket.id
   versioning_configuration {
     status = "Enabled"
   }
 }
 
 # Bucket Policy to allow read access to objects.
-resource "aws_s3_bucket_policy" "wiki_allow_read_access_to_objects" {
-  bucket = aws_s3_bucket.wiki_bucket.id
+resource "aws_s3_bucket_policy" "website_bucket_allow_read_access_to_objects" {
+  bucket = aws_s3_bucket.website_bucket.id
 
   policy = jsonencode({
     "Version" : "2012-10-17",
@@ -71,9 +72,9 @@ resource "aws_acm_certificate" "cert" {
 }
 
 # Cloudfront Distribution for S3 bucket.
-resource "aws_cloudfront_distribution" "s3_distribution" {
+resource "aws_cloudfront_distribution" "website_bucket_s3_distribution" {
   origin {
-    domain_name = aws_s3_bucket.wiki_bucket.bucket_regional_domain_name
+    domain_name = aws_s3_bucket.website_bucket.bucket_regional_domain_name
     origin_id   = local.s3_origin_id
   }
 
@@ -113,14 +114,14 @@ data "aws_route53_zone" "my_domain" {
 }
 
 # Add A record in Route53 for website.
-resource "aws_route53_record" "wiki_record" {
+resource "aws_route53_record" "website_record" {
   zone_id = data.aws_route53_zone.my_domain.zone_id
   name    = var.website_domain_name
   type    = "A"
 
   alias {
-    name                   = aws_cloudfront_distribution.s3_distribution.domain_name
-    zone_id                = aws_cloudfront_distribution.s3_distribution.hosted_zone_id
+    name                   = aws_cloudfront_distribution.website_bucket_s3_distribution.domain_name
+    zone_id                = aws_cloudfront_distribution.website_bucket_s3_distribution.hosted_zone_id
     evaluate_target_health = false
   }
 }
