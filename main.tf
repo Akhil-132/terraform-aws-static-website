@@ -21,7 +21,7 @@ resource "aws_s3_bucket" "website_bucket" {
 # ACL policy for website objects.
 resource "aws_s3_bucket_acl" "website_bucket_acl" {
   bucket = aws_s3_bucket.website_bucket.id
-  acl    = "private"
+  acl    = var.acl
 }
 
 # S3 Bucket Static Website Configuration.
@@ -53,7 +53,7 @@ resource "aws_s3_bucket_policy" "website_bucket_allow_read_access_to_objects" {
         "Effect" : "Allow",
         "Principal" : "*",
         "Action" : "s3:GetObject",
-        "Resource" : "arn:aws:s3:::wiki.thanesh.io/*"
+        "Resource" : "arn:aws:s3:::wiki.${var.hosted_zone}/*"
       }
     ]
   })
@@ -62,8 +62,8 @@ resource "aws_s3_bucket_policy" "website_bucket_allow_read_access_to_objects" {
 # Request SSL Certificate in ACM.
 resource "aws_acm_certificate" "cert" {
   provider                  = aws.us-east-1
-  domain_name               = "*.thanesh.io"
-  subject_alternative_names = ["thanesh.io", "www.thanesh.io"]
+  domain_name               = "*.${var.hosted_zone}"
+  subject_alternative_names = [var.hosted_zone, "www.${var.hosted_zone}"]
   validation_method         = "DNS"
 
   lifecycle {
@@ -110,7 +110,7 @@ resource "aws_cloudfront_distribution" "website_bucket_s3_distribution" {
 
 # Retrieve existing hosted zone.
 data "aws_route53_zone" "my_domain" {
-  name = "thanesh.io"
+  name = var.hosted_zone
 }
 
 # Add A record in Route53 for website.
