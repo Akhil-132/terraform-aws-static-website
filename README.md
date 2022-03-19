@@ -9,7 +9,7 @@ This repository contains a Terraform configuration for provisioning resources to
 This configuration allows for [Hosting a Static Website on Amazon S3](https://docs.aws.amazon.com/AmazonS3/latest/dev/WebsiteHosting.html), provisioning the following resources:
 - S3 Bucket for static files
 - CloudFront Distribution for delivering the website
-- Route53 Record Set aliased to the Cloudfront Distribution
+- Route 53 Record Set aliased to the Cloudfront Distribution
 - ACM SSL certificate to enable HTTPS traffic
 
 ## Usage
