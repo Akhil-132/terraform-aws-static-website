@@ -1,0 +1,14 @@
+inputSet:
+  name: Build_terraform_aws_static_website_1741250087752-pr-trigger-input-set
+  identifier: Build_terraform_aws_static_website_1741250087752prtriggerinputset
+  orgIdentifier: default
+  projectIdentifier: default_project
+  pipeline:
+    identifier: Build_terraform_aws_static_website_1741250087752
+    properties:
+      ci:
+        codebase:
+          build:
+            type: PR
+            spec:
+              number: <+trigger.prNumber>
